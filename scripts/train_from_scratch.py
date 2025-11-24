@@ -28,6 +28,17 @@ from utils.classification_dataset import create_dataloaders
 from utils.metrics import compute_classification_metrics
 
 
+def config_to_dict(config):
+    """Convert config to JSON-serializable dictionary."""
+    config_dict = {}
+    for key, value in vars(config).items():
+        if isinstance(value, Path):
+            config_dict[key] = str(value)
+        else:
+            config_dict[key] = value
+    return config_dict
+
+
 def train_epoch(model, dataloader, optimizer, scheduler, criterion, device, scaler=None):
     """Train for one epoch."""
     model.train()
@@ -316,7 +327,7 @@ def main():
                 'optimizer_state_dict': optimizer.state_dict(),
                 'scheduler_state_dict': scheduler.state_dict(),
                 'val_f1': best_val_f1,
-                'config': vars(config),
+                'config': config_to_dict(config),
                 'metadata': metadata
             }, checkpoint_path)
             print(f"    Saved new best model (F1: {best_val_f1:.4f})")
@@ -330,7 +341,7 @@ def main():
                 'optimizer_state_dict': optimizer.state_dict(),
                 'scheduler_state_dict': scheduler.state_dict(),
                 'history': history,
-                'config': vars(config),
+                'config': config_to_dict(config),
                 'metadata': metadata
             }, checkpoint_path)
             print(f"  Saved checkpoint: {checkpoint_path}")
@@ -359,7 +370,7 @@ def main():
     print('=' * 80)
 
     # Load best model
-    checkpoint = torch.load(checkpoint_dir / "best_model.pt", map_location=config.device)
+    checkpoint = torch.load(checkpoint_dir / "best_model.pt", map_location=config.device, weights_only=False)
     model.load_state_dict(checkpoint['model_state_dict'])
 
     test_metrics = evaluate(model, test_loader, criterion, config.device)
@@ -380,7 +391,7 @@ def main():
         'training_time_minutes': total_time / 60,
         'best_val_f1': best_val_f1,
         'test_metrics': test_metrics,
-        'config': vars(config)
+        'config': config_to_dict(config)
     }
 
     results_path = results_dir / "final_results.json"
