@@ -361,9 +361,7 @@ uv run python scripts/compare_models.py \
 ├── utils/                             # Utility modules
 │   ├── config.py                      # SmallTransformerConfig and FineTuneConfig
 │   ├── classification_dataset.py     # Dataset loading for classification
-│   ├── metrics.py                     # Evaluation metrics (accuracy, F1, etc.)
-│   ├── tokenizer_factory.py          # Tokenizer utilities
-│   └── plotting.py                    # Training visualization
+│   └── metrics.py                     # Evaluation metrics (accuracy, F1, etc.)
 │
 ├── scripts/                           # Training and evaluation scripts
 │   ├── prepare_data.py                # Download and split datasets
@@ -392,6 +390,16 @@ uv run python scripts/compare_models.py \
 ---
 
 ## Model Architecture
+
+### Tokenization
+
+Both models use the **GPT-2 tokenizer** from Hugging Face:
+- Pre-trained BPE (Byte-Pair Encoding) tokenizer
+- Vocabulary size: 50,257 tokens
+- Handles any text without OOV issues
+- Same tokenizer for both from-scratch and fine-tuned models (ensures fair comparison)
+
+This simplifies the implementation and ensures the only difference between models is the architecture and training approach, not the tokenization.
 
 ### Small Transformer Classifier (From-Scratch)
 
