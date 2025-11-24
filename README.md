@@ -12,8 +12,8 @@ uv run python scripts/prepare_data.py --dataset ag_news
 # 3. Train from-scratch model (recommended: run in background on GPU)
 uv run python scripts/train_from_scratch.py --dataset ag_news --model-size medium --epochs 50
 
-# 4. Fine-tune pre-trained model (to be implemented)
-# uv run python scripts/train_fine_tune.py --dataset ag_news --model gpt2 --epochs 10
+# 4. Fine-tune pre-trained model (GPT-2 with LoRA)
+uv run python scripts/train_fine_tune.py --dataset ag_news --model gpt2 --use-lora --epochs 10
 
 # 5. Evaluate and compare models (to be implemented)
 # uv run python scripts/compare_models.py
@@ -311,23 +311,72 @@ results/from_scratch_ag_news_medium/
 └── final_results.json            # Final test set performance
 ```
 
-### 3. Fine-Tuning (To Be Implemented)
+### 3. Fine-Tuning Pre-Trained Models
 
 **Train a pre-trained model:**
 
 ```bash
-# Basic fine-tuning (to be implemented)
+# Basic fine-tuning (full model, GPT-2 base 124M params)
 uv run python scripts/train_fine_tune.py --dataset ag_news --model gpt2
 
-# With LoRA (efficient fine-tuning)
+# With LoRA (efficient fine-tuning, only ~0.3M trainable params)
 uv run python scripts/train_fine_tune.py --dataset ag_news --model gpt2 --use-lora
 
-# Freeze base model (only train classification head)
+# Freeze base model (only train classification head, ~3K trainable params)
 uv run python scripts/train_fine_tune.py --dataset ag_news --model gpt2 --freeze-base
 
 # Different pre-trained models
-uv run python scripts/train_fine_tune.py --dataset ag_news --model gpt2-medium
-uv run python scripts/train_fine_tune.py --dataset ag_news --model EleutherAI/gpt-neo-125m
+uv run python scripts/train_fine_tune.py --dataset ag_news --model gpt2-medium         # 355M params
+uv run python scripts/train_fine_tune.py --dataset ag_news --model EleutherAI/gpt-neo-125m  # 125M params
+uv run python scripts/train_fine_tune.py --dataset ag_news --model openai-community/gpt2-large  # 774M params
+
+# Custom hyperparameters
+uv run python scripts/train_fine_tune.py \
+    --dataset ag_news \
+    --model gpt2 \
+    --epochs 10 \
+    --batch-size 32 \
+    --lr 2e-5 \
+    --max-length 128
+
+# LoRA with custom parameters
+uv run python scripts/train_fine_tune.py \
+    --dataset ag_news \
+    --model gpt2 \
+    --use-lora \
+    --lora-r 16 \
+    --lora-alpha 32
+```
+
+**Training features:**
+- Auto-detects and uses model's pre-trained tokenizer
+- Supports full fine-tuning, LoRA, or frozen base
+- Lower learning rate (2e-5) for stable fine-tuning
+- Fewer epochs (10) than from-scratch
+- Same evaluation metrics as from-scratch
+- Saves best model and checkpoints
+
+**Running in background:**
+```bash
+nohup uv run python scripts/train_fine_tune.py \
+    --dataset ag_news \
+    --model gpt2 \
+    --use-lora > fine_tuning.log 2>&1 &
+
+tail -f fine_tuning.log
+```
+
+**Output files:**
+```
+checkpoints/fine_tuned_ag_news_gpt2_lora/  # or _full, _frozen
+├── best_model.pt                          # Best model checkpoint
+├── checkpoint_epoch_5.pt
+└── ...
+
+results/fine_tuned_ag_news_gpt2_lora/
+├── training_history.json
+├── training_curves.png
+└── final_results.json
 ```
 
 ### 4. Evaluation and Comparison (To Be Implemented)
@@ -527,7 +576,7 @@ uv run python utils/config.py
 
 1. ✅ **Data preparation** - Completed
 2. ✅ **From-scratch training** - Completed
-3. ⏳ **Fine-tuning script** - To be implemented
+3. ✅ **Fine-tuning script** - Completed
 4. ⏳ **Evaluation script** - To be implemented
 5. ⏳ **Comparison script** - To be implemented
 6. ⏳ **Report writing** - After training completes
