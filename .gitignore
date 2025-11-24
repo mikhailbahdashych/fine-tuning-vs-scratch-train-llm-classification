@@ -1,0 +1,7 @@
+.claude/
+.venv/
+checkpoints/
+data/
+CLAUDE.md
+.DS_Store
+__pycache__

@@ -1,0 +1,18 @@
+[project]
+name = "lo-lab3"
+version = "0.1.0"
+description = "Fine-tuning vs From-Scratch Training for Text Classification"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "torch>=2.0.0",
+    "transformers>=4.30.0",
+    "datasets>=2.14.0",
+    "tokenizers>=0.13.0",
+    "sentencepiece>=0.1.99",
+    "numpy>=1.24.0",
+    "matplotlib>=3.7.0",
+    "tqdm>=4.65.0",
+    "scikit-learn>=1.3.0",
+    "peft>=0.5.0",
+]
