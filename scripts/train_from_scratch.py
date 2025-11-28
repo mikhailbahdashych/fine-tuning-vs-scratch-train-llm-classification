@@ -2,7 +2,7 @@
 Training script for from-scratch small transformer classifier.
 
 Usage:
-    uv run python scripts/train_from_scratch.py --dataset ag_news
+    uv run python scripts/train_from_scratch.py --dataset banking77 --model-size tiny
     uv run python scripts/train_from_scratch.py --dataset ag_news --model-size large --epochs 100
 """
 
@@ -166,7 +166,7 @@ def plot_training_curves(history, save_path):
 def main():
     parser = argparse.ArgumentParser(description="Train from-scratch transformer classifier")
 
-    parser.add_argument("--dataset", type=str, required=True, help="Dataset name (e.g., ag_news)")
+    parser.add_argument("--dataset", type=str, required=True, help="Dataset name (e.g., banking77, ag_news)")
     parser.add_argument("--model-size", type=str, default="medium", choices=["tiny", "small", "medium", "large"],
                         help="Model size")
     parser.add_argument("--epochs", type=int, default=50, help="Number of epochs")

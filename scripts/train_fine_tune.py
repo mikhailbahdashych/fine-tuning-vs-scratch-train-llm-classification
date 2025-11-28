@@ -2,9 +2,9 @@
 Fine-tuning script for pre-trained decoder-only models.
 
 Usage:
-    uv run python scripts/train_fine_tune.py --dataset ag_news --model gpt2
+    uv run python scripts/train_fine_tune.py --dataset banking77 --model gpt2 --use-lora
     uv run python scripts/train_fine_tune.py --dataset ag_news --model gpt2 --use-lora
-    uv run python scripts/train_fine_tune.py --dataset ag_news --model gpt2 --freeze-base
+    uv run python scripts/train_fine_tune.py --dataset banking77 --model gpt2 --freeze-base
 """
 
 import argparse
@@ -236,7 +236,7 @@ def plot_training_curves(history, save_path):
 def main():
     parser = argparse.ArgumentParser(description="Fine-tune pre-trained model for classification")
 
-    parser.add_argument("--dataset", type=str, required=True, help="Dataset name (e.g., ag_news)")
+    parser.add_argument("--dataset", type=str, required=True, help="Dataset name (e.g., banking77, ag_news)")
     parser.add_argument("--model", type=str, default="gpt2",
                         help="Pre-trained model (gpt2, gpt2-medium, EleutherAI/gpt-neo-125m, etc.)")
     parser.add_argument("--epochs", type=int, default=10, help="Number of epochs")

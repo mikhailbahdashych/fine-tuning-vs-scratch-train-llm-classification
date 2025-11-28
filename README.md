@@ -39,19 +39,23 @@ Students should analyze the differences in training behavior, generalization, st
 ---
 
 ### **Dataset Selection**
-Choose **one text classification dataset** from Hugging Face with at least a few thousand examples.  
-Examples include (but are not limited to):
+Choose **one text classification dataset** from Hugging Face with at least a few thousand examples.
 
-- AG News  
-- Yelp Review Polarity  
-- Amazon Reviews  
-- Tweet Eval (sentiment or hate speech)  
+**Recommended datasets** (tested and working):
+
+- **PolyAI/banking77** - 77 intent classes, financial domain, ~10K samples (RECOMMENDED - challenging multi-class)
+- **stanfordnlp/imdb** - Binary sentiment, movie reviews, 25K train/test (long texts, nuanced)
+- **yelp_polarity** - Binary sentiment, Yelp reviews, 560K train (large dataset)
+- **ag_news** - 4 news categories, 120K train (simple, may be too easy)
+
+**Other options:**
+- Tweet Eval (sentiment or hate speech)
 - Toxic Comment Classification
 - [Polish youth slang](https://huggingface.co/datasets/jziebura/polish_youth_slang_classification)
 
 Important requirements:
-- The dataset must involve **full text classification** (not token classification).  
-- The texts should be long enough to demonstrate the difference between the two approaches.  
+- The dataset must involve **full text classification** (not token classification).
+- Choose a dataset with enough complexity to show the value of fine-tuning vs from-scratch.
 - The dataset must be split into **train/validation/test** (use provided splits or create them).
 
 ---
@@ -204,6 +208,42 @@ Discuss:
 
 ---
 
+## Quick Start (Banking77 Dataset)
+
+If you want to get started quickly with the recommended Banking77 dataset:
+
+```bash
+# 1. Prepare data
+uv run python scripts/prepare_data.py --dataset PolyAI/banking77
+
+# 2. Train from-scratch model (tiny size to avoid overfitting)
+uv run python scripts/train_from_scratch.py \
+    --dataset banking77 \
+    --model-size tiny \
+    --epochs 50 \
+    --early-stopping-patience 10 \
+    --max-length 64
+
+# 3. Fine-tune GPT-2 with LoRA
+uv run python scripts/train_fine_tune.py \
+    --dataset banking77 \
+    --model gpt2 \
+    --use-lora \
+    --epochs 10 \
+    --max-length 64
+
+# 4. Compare results in results/ folder
+```
+
+**Why Banking77?**
+- 77 intent classes (challenging multi-class classification)
+- Financial domain with nuanced, similar intents
+- Short texts (typical user queries)
+- Better demonstrates the value of pre-training vs from-scratch
+- ~10K training samples (right size for comparing approaches)
+
+---
+
 ## Implementation Guide
 
 ### 1. Data Preparation
@@ -211,17 +251,20 @@ Discuss:
 **Prepare a classification dataset:**
 
 ```bash
+# Banking77 (77-class intent classification) - RECOMMENDED FOR CHALLENGING COMPARISON
+uv run python scripts/prepare_data.py --dataset PolyAI/banking77
+
 # AG News (4-class news: World, Sports, Business, Sci/Tech)
 uv run python scripts/prepare_data.py --dataset ag_news
 
 # IMDB (binary sentiment)
-uv run python scripts/prepare_data.py --dataset imdb
+uv run python scripts/prepare_data.py --dataset stanfordnlp/imdb
 
 # Yelp Polarity (binary sentiment)
 uv run python scripts/prepare_data.py --dataset yelp_polarity
 
 # Custom output directory
-uv run python scripts/prepare_data.py --dataset ag_news --output data/processed/my_dataset
+uv run python scripts/prepare_data.py --dataset PolyAI/banking77 --output data/processed/my_dataset
 ```
 
 **What this does:**
@@ -244,35 +287,38 @@ data/processed/ag_news/
 **Train a small transformer from random initialization:**
 
 ```bash
-# Basic training with default settings (medium model, 50 epochs)
-uv run python scripts/train_from_scratch.py --dataset ag_news
+# Basic training with Banking77 (recommended for challenging comparison)
+uv run python scripts/train_from_scratch.py --dataset banking77 --model-size tiny
 
 # Train different model sizes
-uv run python scripts/train_from_scratch.py --dataset ag_news --model-size tiny    # ~1.7M params
-uv run python scripts/train_from_scratch.py --dataset ag_news --model-size small   # ~3.3M params
-uv run python scripts/train_from_scratch.py --dataset ag_news --model-size medium  # ~4.9M params (default)
-uv run python scripts/train_from_scratch.py --dataset ag_news --model-size large   # ~8.1M params
+uv run python scripts/train_from_scratch.py --dataset banking77 --model-size tiny    # ~1.7M params
+uv run python scripts/train_from_scratch.py --dataset banking77 --model-size small   # ~3.3M params
+uv run python scripts/train_from_scratch.py --dataset banking77 --model-size medium  # ~4.9M params (default)
+uv run python scripts/train_from_scratch.py --dataset banking77 --model-size large   # ~8.1M params
+
+# AG News (if using AG News instead)
+uv run python scripts/train_from_scratch.py --dataset ag_news --model-size tiny
 
 # Custom hyperparameters
 uv run python scripts/train_from_scratch.py \
-    --dataset ag_news \
-    --model-size medium \
+    --dataset banking77 \
+    --model-size tiny \
     --epochs 100 \
     --batch-size 64 \
     --lr 5e-4 \
-    --max-length 128
+    --max-length 64
 
-# Enable early stopping (stops if no improvement for N epochs)
+# Enable early stopping (RECOMMENDED - stops if no improvement for N epochs)
 uv run python scripts/train_from_scratch.py \
-    --dataset ag_news \
-    --model-size medium \
+    --dataset banking77 \
+    --model-size tiny \
     --epochs 50 \
     --early-stopping-patience 10
 
 # Resume from checkpoint
 uv run python scripts/train_from_scratch.py \
-    --dataset ag_news \
-    --resume checkpoints/from_scratch_ag_news_medium/checkpoint_epoch_50.pt
+    --dataset banking77 \
+    --resume checkpoints/from_scratch_banking77_tiny/checkpoint_epoch_50.pt
 ```
 
 **Training features:**
@@ -324,32 +370,38 @@ results/from_scratch_ag_news_medium/
 **Train a pre-trained model:**
 
 ```bash
-# Basic fine-tuning (full model, GPT-2 base 124M params)
-uv run python scripts/train_fine_tune.py --dataset ag_news --model gpt2
+# Basic fine-tuning with Banking77 (recommended)
+uv run python scripts/train_fine_tune.py --dataset banking77 --model gpt2 --use-lora
 
-# With LoRA (efficient fine-tuning, only ~0.3M trainable params)
+# With LoRA (efficient fine-tuning, only ~0.8M trainable params - RECOMMENDED)
+uv run python scripts/train_fine_tune.py --dataset banking77 --model gpt2 --use-lora
+
+# Full fine-tuning (all 124M params trainable)
+uv run python scripts/train_fine_tune.py --dataset banking77 --model gpt2
+
+# Freeze base model (only train classification head, ~77K trainable params for 77 classes)
+uv run python scripts/train_fine_tune.py --dataset banking77 --model gpt2 --freeze-base
+
+# AG News (if using AG News instead)
 uv run python scripts/train_fine_tune.py --dataset ag_news --model gpt2 --use-lora
 
-# Freeze base model (only train classification head, ~3K trainable params)
-uv run python scripts/train_fine_tune.py --dataset ag_news --model gpt2 --freeze-base
-
 # Different pre-trained models
-uv run python scripts/train_fine_tune.py --dataset ag_news --model gpt2-medium         # 355M params
-uv run python scripts/train_fine_tune.py --dataset ag_news --model EleutherAI/gpt-neo-125m  # 125M params
-uv run python scripts/train_fine_tune.py --dataset ag_news --model openai-community/gpt2-large  # 774M params
+uv run python scripts/train_fine_tune.py --dataset banking77 --model gpt2-medium --use-lora         # 355M params
+uv run python scripts/train_fine_tune.py --dataset banking77 --model EleutherAI/gpt-neo-125m --use-lora  # 125M params
+uv run python scripts/train_fine_tune.py --dataset banking77 --model openai-community/gpt2-large --use-lora  # 774M params
 
 # Custom hyperparameters
 uv run python scripts/train_fine_tune.py \
-    --dataset ag_news \
+    --dataset banking77 \
     --model gpt2 \
     --epochs 10 \
     --batch-size 32 \
     --lr 2e-5 \
-    --max-length 128
+    --max-length 64
 
 # LoRA with custom parameters
 uv run python scripts/train_fine_tune.py \
-    --dataset ag_news \
+    --dataset banking77 \
     --model gpt2 \
     --use-lora \
     --lora-r 16 \
