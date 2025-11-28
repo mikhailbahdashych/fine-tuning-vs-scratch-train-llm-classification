@@ -224,12 +224,12 @@ uv run python scripts/train_from_scratch.py \
     --early-stopping-patience 10 \
     --max-length 64
 
-# 3. Fine-tune GPT-2 with LoRA
+# 3. Fine-tune GPT-2 with LoRA (20 epochs for 77 classes)
 uv run python scripts/train_fine_tune.py \
     --dataset banking77 \
     --model gpt2 \
     --use-lora \
-    --epochs 10 \
+    --epochs 20 \
     --max-length 64
 
 # 4. Compare results in results/ folder
@@ -390,13 +390,14 @@ uv run python scripts/train_fine_tune.py --dataset banking77 --model gpt2-medium
 uv run python scripts/train_fine_tune.py --dataset banking77 --model EleutherAI/gpt-neo-125m --use-lora  # 125M params
 uv run python scripts/train_fine_tune.py --dataset banking77 --model openai-community/gpt2-large --use-lora  # 774M params
 
-# Custom hyperparameters
+# Custom hyperparameters (banking77 needs more epochs and higher LR)
 uv run python scripts/train_fine_tune.py \
     --dataset banking77 \
     --model gpt2 \
-    --epochs 10 \
+    --use-lora \
+    --epochs 20 \
     --batch-size 32 \
-    --lr 2e-5 \
+    --lr 5e-5 \
     --max-length 64
 
 # LoRA with custom parameters
@@ -411,8 +412,10 @@ uv run python scripts/train_fine_tune.py \
 **Training features:**
 - Auto-detects and uses model's pre-trained tokenizer
 - Supports full fine-tuning, LoRA, or frozen base
-- Lower learning rate (2e-5) for stable fine-tuning
-- Fewer epochs (10) than from-scratch
+- **Auto-adjusts LR and warmup** for multi-class tasks (>20 classes)
+  - Banking77 (77 classes): LR 2e-5 → 5e-5, warmup 500 → 2000 steps
+  - AG News (4 classes): Uses default 2e-5 LR
+- Fewer epochs than from-scratch (10-20 depending on task)
 - Same evaluation metrics as from-scratch
 - Saves best model and checkpoints
 
