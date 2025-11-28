@@ -173,6 +173,8 @@ def main():
     parser.add_argument("--batch-size", type=int, default=None, help="Batch size (default: from config)")
     parser.add_argument("--lr", type=float, default=None, help="Learning rate (default: from config)")
     parser.add_argument("--max-length", type=int, default=128, help="Maximum sequence length")
+    parser.add_argument("--early-stopping-patience", type=int, default=10,
+                        help="Early stopping patience (epochs without improvement)")
     parser.add_argument("--resume", type=str, default=None, help="Resume from checkpoint")
 
     args = parser.parse_args()
@@ -275,11 +277,14 @@ def main():
     }
 
     best_val_f1 = 0
+    epochs_without_improvement = 0
     start_time = time.time()
 
     print(f"\n{'=' * 80}")
     print("STARTING TRAINING")
     print('=' * 80)
+    if args.early_stopping_patience > 0:
+        print(f"Early stopping enabled with patience: {args.early_stopping_patience} epochs")
 
     for epoch in range(config.num_epochs):
         epoch_start = time.time()
@@ -317,9 +322,10 @@ def main():
         print(f"  Learning Rate: {current_lr:.6f}")
         print(f"  Epoch Time: {epoch_time:.1f}s")
 
-        # Save best model
+        # Save best model and check early stopping
         if val_metrics['f1_macro'] > best_val_f1:
             best_val_f1 = val_metrics['f1_macro']
+            epochs_without_improvement = 0
             checkpoint_path = checkpoint_dir / "best_model.pt"
             torch.save({
                 'epoch': epoch,
@@ -331,6 +337,19 @@ def main():
                 'metadata': metadata
             }, checkpoint_path)
             print(f"    Saved new best model (F1: {best_val_f1:.4f})")
+        else:
+            epochs_without_improvement += 1
+            print(f"    No improvement for {epochs_without_improvement} epoch(s)")
+
+            # Early stopping check
+            if args.early_stopping_patience > 0 and epochs_without_improvement >= args.early_stopping_patience:
+                print(f"\n{'!' * 80}")
+                print(f"EARLY STOPPING TRIGGERED")
+                print(f"{'!' * 80}")
+                print(f"No improvement in validation F1 for {args.early_stopping_patience} consecutive epochs")
+                print(f"Best validation F1: {best_val_f1:.4f} (achieved at epoch {epoch + 1 - epochs_without_improvement})")
+                print(f"Stopping training at epoch {epoch + 1}/{config.num_epochs}")
+                break
 
         # Save checkpoint every 10 epochs
         if (epoch + 1) % 10 == 0:
