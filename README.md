@@ -262,6 +262,13 @@ uv run python scripts/train_from_scratch.py \
     --lr 5e-4 \
     --max-length 128
 
+# Enable early stopping (stops if no improvement for N epochs)
+uv run python scripts/train_from_scratch.py \
+    --dataset ag_news \
+    --model-size medium \
+    --epochs 50 \
+    --early-stopping-patience 10
+
 # Resume from checkpoint
 uv run python scripts/train_from_scratch.py \
     --dataset ag_news \
@@ -273,6 +280,7 @@ uv run python scripts/train_from_scratch.py \
 - Mixed precision training (AMP) on CUDA
 - OneCycleLR scheduler with 10% warmup
 - Gradient clipping for stability
+- **Early stopping** to prevent overfitting (monitors validation F1)
 - Saves best model (based on validation F1)
 - Saves checkpoints every 10 epochs
 - Generates training curves plot
