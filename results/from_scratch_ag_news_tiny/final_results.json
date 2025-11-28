@@ -1,19 +1,19 @@
 {
-  "model_size": "small",
-  "num_parameters": 10985092,
+  "model_size": "tiny",
+  "num_parameters": 6830212,
   "dataset": "ag_news",
   "num_classes": 4,
-  "training_time_minutes": 5.952805880705515,
-  "best_val_f1": 0.9216821119333344,
+  "training_time_minutes": 4.889185961087545,
+  "best_val_f1": 0.9196108018447113,
   "test_metrics": {
-    "accuracy": 0.9194736842105263,
-    "precision_macro": 0.9207893874423941,
-    "recall_macro": 0.9194736842105263,
-    "f1_macro": 0.9191874450312878,
-    "precision_weighted": 0.9207893874423944,
-    "recall_weighted": 0.9194736842105263,
-    "f1_weighted": 0.9191874450312877,
-    "loss": 0.5248963601887227
+    "accuracy": 0.9161842105263158,
+    "precision_macro": 0.9162556268744505,
+    "recall_macro": 0.9161842105263157,
+    "f1_macro": 0.9159636637923497,
+    "precision_weighted": 0.9162556268744505,
+    "recall_weighted": 0.9161842105263158,
+    "f1_weighted": 0.9159636637923497,
+    "loss": 0.5363926582038403
   },
   "config": {
     "dataset_name": "default",
@@ -53,7 +53,7 @@
     "num_layers": 3,
     "ff_dim": 1024,
     "dropout": 0.3,
-    "model_size": "small",
+    "model_size": "tiny",
     "num_classes": 4,
     "scheduler_patience": 3
   }
