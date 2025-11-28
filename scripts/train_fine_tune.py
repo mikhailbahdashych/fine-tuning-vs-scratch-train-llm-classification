@@ -314,6 +314,22 @@ def main():
     print(f"  Number of classes: {num_classes}")
     print(f"  Class names: {class_names}")
 
+    # Adjust hyperparameters based on number of classes
+    if num_classes > 20 and not args.lr:  # User didn't specify LR
+        # For multi-class problems (>20 classes), use higher learning rate
+        original_lr = config.learning_rate
+        config.learning_rate = 5e-5  # 2.5x higher than default 2e-5
+        print(f"\n  ℹ️  Auto-adjusted learning rate: {original_lr:.2e} → {config.learning_rate:.2e}")
+        print(f"     (Higher LR recommended for {num_classes} classes)")
+
+    if num_classes > 20:
+        # Increase warmup steps for harder tasks
+        original_warmup = config.warmup_steps
+        config.warmup_steps = min(2000, len(train_loader) * 2)  # 2 epochs or 2000 steps
+        if config.warmup_steps != original_warmup:
+            print(f"  ℹ️  Auto-adjusted warmup steps: {original_warmup} → {config.warmup_steps}")
+            print(f"     (More warmup needed for {num_classes} classes)")
+
     # Load pre-trained model
     print(f"\nLoading pre-trained model: {args.model}...")
     model = AutoModelForSequenceClassification.from_pretrained(
